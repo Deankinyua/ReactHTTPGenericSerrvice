@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ProductsList from './Components/ProductsList';
-import axios, { AxiosError } from 'axios';
+import apiClient, { CanceledError, AxiosError } from './services/api-client';
 
 interface User {
   id: number;
@@ -20,29 +20,82 @@ function App() {
     setIsLoading(true);
     (async function () {
       try {
-        const res = await axios.get<User[]>(
-          'https://jsonplaceholder.typicode.com/users',
-          { signal: controller.signal }
-        );
+        const res = await apiClient.get<User[]>('/users', {
+          signal: controller.signal,
+        });
         setUsers(res.data);
         setIsLoading(false);
       } catch (err) {
+        if (err instanceof CanceledError) return;
         setError((err as AxiosError).message);
         setIsLoading(false);
       }
+
       return () => controller.abort();
     })();
   }, []);
+
+  const deleteUser = (user: User) => {
+    const originalUsers = [...users];
+    setUsers(users.filter((u) => u.id !== user.id));
+    apiClient.delete(`/users/${user}`).catch((err) => {
+      setError(err.message);
+      setUsers(originalUsers);
+    });
+  };
+
+  const addUser = () => {
+    const originalUsers = [...users];
+    const newUser = { id: 0, name: 'Mosh' };
+    setUsers([...users, newUser]);
+    apiClient
+      .post(`/users`, newUser)
+      .then((res) => setUsers([res.data, ...users]))
+      .catch((err) => {
+        setError(err.message);
+        setUsers(originalUsers);
+      });
+  };
+
+  const updateUser = (user: User) => {
+    const originalUsers = [...users];
+    const updatedUser = { ...user, name: user.name + '!' };
+    setUsers(users.map((u) => (u.id === user.id ? updatedUser : u)));
+
+    apiClient.patch(`/users/${user.id}`, updatedUser).catch((err) => {
+      setError(err.message);
+      setUsers(originalUsers);
+    });
+  };
 
   return (
     <>
       {error && <p className="text-danger">{error}</p>}
       {isLoading && <div className="spinner-border"></div>}
+      <button className="btn btn-primary mb-3" onClick={addUser}>
+        Add User
+      </button>
       <ul className="list-group">
         {users.map((user) => (
-          <li key={user.id} className="list-group-item">
+          <li
+            key={user.id}
+            className="list-group-item d-flex justify-content-between"
+          >
             {user.name}{' '}
-            <button className="btn btn-outline-danger">Delete</button>
+            <div>
+              <button
+                onClick={() => updateUser(user)}
+                className="btn btn-outline-secondary mx-1"
+              >
+                Update
+              </button>
+              <button
+                onClick={() => deleteUser(user)}
+                className="btn btn-outline-danger"
+              >
+                Delete
+              </button>
+            </div>
           </li>
         ))}
       </ul>{' '}
