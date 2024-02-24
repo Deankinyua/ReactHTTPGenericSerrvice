@@ -11,7 +11,6 @@ class HttpService {
         this.endPoint = endPoint
     }
 
-
     getAll<T>() {
         const controller = new AbortController
         const request = apiClient.get<T[]>(this.endPoint, {
