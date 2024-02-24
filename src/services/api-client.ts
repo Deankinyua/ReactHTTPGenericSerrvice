@@ -1,4 +1,4 @@
-// * creating a new access client with a custom configuration 
+// * creating a new axios clieint with a custom configuration 
 
 import axios, { CanceledError, AxiosError }  from "axios";
 
