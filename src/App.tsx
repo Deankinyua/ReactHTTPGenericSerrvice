@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import ProductsList from './Components/ProductsList';
-import { CanceledError } from './services/api-client';
 import userService, { User } from './services/userService';
 import useUsers from './hooks/useUsers';
 
@@ -86,7 +85,7 @@ function App() {
           ))}
         </select>
       </div>
-      {/* <ProductsList category={category}></ProductsList> */}
+      <ProductsList category={category}></ProductsList>
     </>
   );
 }
